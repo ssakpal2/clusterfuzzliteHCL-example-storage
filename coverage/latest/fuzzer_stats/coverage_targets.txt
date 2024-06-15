@@ -1,1 +1,1 @@
-fuzz_calculator
+fuzz_target
