@@ -263,7 +263,7 @@ _ZN10calculator16ExpressionParserIiE7parseOpEv:
   ------------------
   308|      0|                {
   309|      0|                  index_++;
-  310|      0|                  return Operator(OPERATOR_INTEGER_DIVISION,       20, 'L');
+  310|      0|                  return Operator(OPERATOR_INTEGE_DIVISION,       20, 'L');
   311|      0|                }
   312|      0|                return Operator(OPERATOR_DIVISION,     20, 'L'); 
   313|      8|      case '%': index_++;     return Operator(OPERATOR_MODULO,         20, 'L');
@@ -343,7 +343,7 @@ _ZNK10calculator16ExpressionParserIiE9calculateEiiRKNS1_8OperatorE:
   ------------------
   |  Branch (240:7): [True: 8, False: 5]
   ------------------
-  241|      0|      case OPERATOR_INTEGER_DIVISION: return v1/v2;
+  241|      0|      case OPERATOR_INTEGE_DIVISION: return v1/v2;
   ------------------
   |  Branch (241:7): [True: 0, False: 13]
   ------------------
