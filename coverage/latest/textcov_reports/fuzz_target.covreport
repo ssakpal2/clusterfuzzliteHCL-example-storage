@@ -1,0 +1,441 @@
+_ZN10calculator4evalIiEET_RKNSt3__112basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE:
+  445|    117|{
+  446|    117|  ExpressionParser<T> parser;
+  447|    117|  return parser.eval(expression);
+  448|    117|}
+_ZN10calculator16ExpressionParserIiE4evalERKNSt3__112basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE:
+  102|    117|  {
+  103|    117|    T result = 0;
+  104|    117|    index_ = 0;
+  105|    117|    expr_ = expr;
+  106|    117|    try
+  107|    117|    {
+  108|    117|      result = parseExpr();
+  109|    117|      if (!isEnd())
+  ------------------
+  |  Branch (109:11): [True: 46, False: 71]
+  ------------------
+  110|     46|        unexpected();
+  111|    117|    }
+  112|    117|    catch (const calculator::error&)
+  113|    117|    {
+  114|    206|      while(!stack_.empty())
+  ------------------
+  |  Branch (114:13): [True: 94, False: 112]
+  ------------------
+  115|     94|        stack_.pop();
+  116|    112|      throw;
+  117|    112|    }
+  118|      5|    return result;
+  119|    117|  }
+_ZN10calculator16ExpressionParserIiE9parseExprEv:
+  410|    142|  {
+  411|    142|    stack_.push(OperatorValue(Operator(OPERATOR_NULL, 0, 'L'), 0));
+  412|       |    // first parse value on the left
+  413|    142|    T value = parseValue();
+  414|       |
+  415|    163|    while (!stack_.empty())
+  ------------------
+  |  Branch (415:12): [True: 77, False: 86]
+  ------------------
+  416|     77|    {
+  417|       |      // parse an operator (+, -, *, ...)
+  418|     77|      Operator op(parseOp());
+  419|     90|      while (op.precedence  < stack_.top().getPrecedence() || (
+  ------------------
+  |  Branch (419:14): [True: 10, False: 80]
+  ------------------
+  420|     80|             op.precedence == stack_.top().getPrecedence() &&
+  ------------------
+  |  Branch (420:14): [True: 59, False: 21]
+  ------------------
+  421|     80|             op.associativity == 'L'))
+  ------------------
+  |  Branch (421:14): [True: 59, False: 0]
+  ------------------
+  422|     69|      {
+  423|       |        // end reached
+  424|     69|        if (stack_.top().isNull())
+  ------------------
+  |  Branch (424:13): [True: 56, False: 13]
+  ------------------
+  425|     56|        {
+  426|     56|          stack_.pop();
+  427|     56|          return value;
+  428|     56|        }
+  429|       |        // do the calculation ("reduce"), producing a new value
+  430|     13|        value = calculate(stack_.top().value, value, stack_.top().op);
+  431|     13|        stack_.pop();
+  432|     13|      }
+  433|       |
+  434|       |      // store on stack_ and continue parsing ("shift")
+  435|     21|      stack_.push(OperatorValue(op, value));
+  436|       |      // parse value on the right
+  437|     21|      value = parseValue();
+  438|     21|    }
+  439|     86|    return 0;
+  440|    142|  }
+_ZN10calculator16ExpressionParserIiE8OperatorC2Eiii:
+  158|    219|    { }
+_ZN10calculator16ExpressionParserIiE13OperatorValueC2ERKNS1_8OperatorEi:
+  168|    163|    { }
+_ZN10calculator16ExpressionParserIiE10parseValueEv:
+  370|    201|  {
+  371|    201|    T val = 0;
+  372|    201|    eatSpaces();
+  373|    201|    switch (getCharacter())
+  374|    201|    {
+  375|      4|      case '0': if (isHex())
+  ------------------
+  |  Branch (375:7): [True: 4, False: 197]
+  |  Branch (375:21): [True: 0, False: 4]
+  ------------------
+  376|      0|                  val = parseHex();
+  377|      4|                else
+  378|      4|                  val = parseDecimal();
+  379|      4|                break;
+  380|     69|      case '1': case '2': case '3': case '4': case '5':
+  ------------------
+  |  Branch (380:7): [True: 5, False: 196]
+  |  Branch (380:17): [True: 14, False: 187]
+  |  Branch (380:27): [True: 8, False: 193]
+  |  Branch (380:37): [True: 1, False: 200]
+  |  Branch (380:47): [True: 41, False: 160]
+  ------------------
+  381|     73|      case '6': case '7': case '8': case '9':
+  ------------------
+  |  Branch (381:7): [True: 1, False: 200]
+  |  Branch (381:17): [True: 1, False: 200]
+  |  Branch (381:27): [True: 1, False: 200]
+  |  Branch (381:37): [True: 1, False: 200]
+  ------------------
+  382|     73|                val = parseDecimal();
+  383|     73|                break;
+  384|     25|      case '(': index_++;
+  ------------------
+  |  Branch (384:7): [True: 25, False: 176]
+  ------------------
+  385|     25|                val = parseExpr();
+  386|     25|                eatSpaces();
+  387|     25|                if (getCharacter() != ')')
+  ------------------
+  |  Branch (387:21): [True: 5, False: 20]
+  ------------------
+  388|      5|                {
+  389|      5|                  if (!isEnd())
+  ------------------
+  |  Branch (389:23): [True: 5, False: 0]
+  ------------------
+  390|      5|                    unexpected();
+  391|      5|                  throw calculator::error(expr_, "Syntax error: `)' expected at end of expression");
+  392|      5|                }
+  393|     20|                index_++; break;
+  394|     24|      case '~': index_++; val = ~parseValue(); break;
+  ------------------
+  |  Branch (394:7): [True: 24, False: 177]
+  ------------------
+  395|      3|      case '+': index_++; val =  parseValue(); break;
+  ------------------
+  |  Branch (395:7): [True: 3, False: 198]
+  ------------------
+  396|     11|      case '-': index_++; val =  parseValue() * static_cast<T>(-1);
+  ------------------
+  |  Branch (396:7): [True: 11, False: 190]
+  ------------------
+  397|     11|                break;
+  398|     61|      default : if (!isEnd())
+  ------------------
+  |  Branch (398:7): [True: 61, False: 140]
+  |  Branch (398:21): [True: 51, False: 10]
+  ------------------
+  399|     51|                  unexpected();
+  400|     61|                throw calculator::error(expr_, "Syntax error: value expected at end of expression");
+  401|    201|    }
+  402|     81|    return val;
+  403|    201|  }
+_ZN10calculator16ExpressionParserIiE9eatSpacesEv:
+  287|    283|  {
+  288|    318|    while (std::isspace(getCharacter()) != 0)
+  ------------------
+  |  Branch (288:12): [True: 35, False: 283]
+  ------------------
+  289|     35|      index_++;
+  290|    283|  }
+_ZNK10calculator16ExpressionParserIiE12getCharacterEv:
+  257|  1.71k|  {
+  258|  1.71k|    if (!isEnd())
+  ------------------
+  |  Branch (258:9): [True: 1.67k, False: 36]
+  ------------------
+  259|  1.67k|      return expr_[index_];
+  260|     36|    return 0;
+  261|  1.71k|  }
+_ZNK10calculator16ExpressionParserIiE5isHexEv:
+  355|      4|  {
+  356|      4|    if (index_ + 2 < expr_.size())
+  ------------------
+  |  Branch (356:9): [True: 2, False: 2]
+  ------------------
+  357|      2|    {
+  358|      2|      char x = expr_[index_ + 1];
+  359|      2|      char h = expr_[index_ + 2];
+  360|      2|      return (std::tolower(x) == 'x' && toInteger(h) <= 0xf);
+  ------------------
+  |  Branch (360:15): [True: 0, False: 2]
+  |  Branch (360:41): [True: 0, False: 0]
+  ------------------
+  361|      2|    }
+  362|      2|    return false;
+  363|      4|  }
+_ZN10calculator16ExpressionParserIiE9toIntegerEc:
+  324|  1.10k|  {
+  325|  1.10k|    if (c >= '0' && c <= '9') return c -'0';
+  ------------------
+  |  Branch (325:9): [True: 1.04k, False: 63]
+  |  Branch (325:21): [True: 1.03k, False: 14]
+  ------------------
+  326|     77|    if (c >= 'a' && c <= 'f') return c -'a' + 0xa;
+  ------------------
+  |  Branch (326:9): [True: 12, False: 65]
+  |  Branch (326:21): [True: 2, False: 10]
+  ------------------
+  327|     75|    if (c >= 'A' && c <= 'F') return c -'A' + 0xa;
+  ------------------
+  |  Branch (327:9): [True: 11, False: 64]
+  |  Branch (327:21): [True: 1, False: 10]
+  ------------------
+  328|     74|    T noDigit = 0xf + 1;
+  329|     74|    return noDigit;
+  330|     75|  }
+_ZNK10calculator16ExpressionParserIiE10getIntegerEv:
+  333|  1.10k|  {
+  334|  1.10k|    return toInteger(getCharacter());
+  335|  1.10k|  }
+_ZN10calculator16ExpressionParserIiE12parseDecimalEv:
+  338|     77|  {
+  339|     77|    T value = 0;
+  340|  1.10k|    for (T d; (d = getInteger()) <= 9; index_++)
+  ------------------
+  |  Branch (340:15): [True: 1.03k, False: 77]
+  ------------------
+  341|  1.03k|      value = value * 10 + d;
+  342|     77|    return value;
+  343|     77|  }
+_ZN10calculator5errorC2ERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_:
+   82|    112|  { }
+_ZN10calculator16ExpressionParserIiE7parseOpEv:
+  296|     77|  {
+  297|     77|    eatSpaces();
+  298|     77|    switch (getCharacter())
+  299|     77|    {
+  300|      4|      case '|': index_++;     return Operator(OPERATOR_BITWISE_OR,      4, 'L');
+  ------------------
+  |  Branch (300:7): [True: 4, False: 73]
+  ------------------
+  301|      0|      case '^': index_++;     return Operator(OPERATOR_BITWISE_XOR,     5, 'L');
+  ------------------
+  |  Branch (301:7): [True: 0, False: 77]
+  ------------------
+  302|      2|      case '&': index_++;     return Operator(OPERATOR_BITWISE_AND,     6, 'L');
+  ------------------
+  |  Branch (302:7): [True: 2, False: 75]
+  ------------------
+  303|      0|      case '<': expect("<<"); return Operator(OPERATOR_BITWISE_SHL,     9, 'L');
+  ------------------
+  |  Branch (303:7): [True: 0, False: 77]
+  ------------------
+  304|      0|      case '>': expect(">>"); return Operator(OPERATOR_BITWISE_SHR,     9, 'L');
+  ------------------
+  |  Branch (304:7): [True: 0, False: 77]
+  ------------------
+  305|      1|      case '+': index_++;     return Operator(OPERATOR_ADDITION,       10, 'L');
+  ------------------
+  |  Branch (305:7): [True: 1, False: 76]
+  ------------------
+  306|      4|      case '-': index_++;     return Operator(OPERATOR_SUBTRACTION,    10, 'L');
+  ------------------
+  |  Branch (306:7): [True: 4, False: 73]
+  ------------------
+  307|      0|      case '/': index_++;  if (getCharacter() == '/')  
+  ------------------
+  |  Branch (307:7): [True: 0, False: 77]
+  |  Branch (307:32): [True: 0, False: 0]
+  ------------------
+  308|      0|                {
+  309|      0|                  index_++;
+  310|      0|                  return Operator(OPERATOR_INTEGER_DIVISION,       20, 'L');
+  311|      0|                }
+  312|      0|                return Operator(OPERATOR_DIVISION,       20, 'L');
+  313|      8|      case '%': index_++;     return Operator(OPERATOR_MODULO,         20, 'L');
+  ------------------
+  |  Branch (313:7): [True: 8, False: 69]
+  ------------------
+  314|      2|      case '*': index_++; if (getCharacter() != '*')
+  ------------------
+  |  Branch (314:7): [True: 2, False: 75]
+  |  Branch (314:31): [True: 2, False: 0]
+  ------------------
+  315|      2|                              return Operator(OPERATOR_MULTIPLICATION, 20, 'L');
+  316|      0|                index_++;     return Operator(OPERATOR_POWER,          30, 'R');
+  317|      0|      case 'e': index_++;     return Operator(OPERATOR_EXPONENT,       40, 'R');
+  ------------------
+  |  Branch (317:7): [True: 0, False: 77]
+  ------------------
+  318|      0|      case 'E': index_++;     return Operator(OPERATOR_EXPONENT,       40, 'R');
+  ------------------
+  |  Branch (318:7): [True: 0, False: 77]
+  ------------------
+  319|     56|      default :               return Operator(OPERATOR_NULL,            0, 'L');
+  ------------------
+  |  Branch (319:7): [True: 56, False: 21]
+  ------------------
+  320|     77|    }
+  321|     77|  }
+_ZNK10calculator16ExpressionParserIiE13OperatorValue13getPrecedenceEv:
+  170|    170|    {
+  171|    170|      return op.precedence;
+  172|    170|    }
+_ZNK10calculator16ExpressionParserIiE13OperatorValue6isNullEv:
+  174|     69|    {
+  175|     69|      return op.op == OPERATOR_NULL;
+  176|     69|    }
+_ZNK10calculator16ExpressionParserIiE9calculateEiiRKNS1_8OperatorE:
+  228|     13|  {
+  229|     13|    switch (op.op)
+  230|     13|    {
+  231|      2|      case OPERATOR_BITWISE_OR:     return v1 | v2;
+  ------------------
+  |  Branch (231:7): [True: 2, False: 11]
+  ------------------
+  232|      0|      case OPERATOR_BITWISE_XOR:    return v1 ^ v2;
+  ------------------
+  |  Branch (232:7): [True: 0, False: 13]
+  ------------------
+  233|      0|      case OPERATOR_BITWISE_AND:    return v1 & v2;
+  ------------------
+  |  Branch (233:7): [True: 0, False: 13]
+  ------------------
+  234|      0|      case OPERATOR_BITWISE_SHL:    return v1 << v2;
+  ------------------
+  |  Branch (234:7): [True: 0, False: 13]
+  ------------------
+  235|      0|      case OPERATOR_BITWISE_SHR:    return v1 >> v2;
+  ------------------
+  |  Branch (235:7): [True: 0, False: 13]
+  ------------------
+  236|      0|      case OPERATOR_ADDITION:       return v1 + v2;
+  ------------------
+  |  Branch (236:7): [True: 0, False: 13]
+  ------------------
+  237|      3|      case OPERATOR_SUBTRACTION:    return v1 - v2;
+  ------------------
+  |  Branch (237:7): [True: 3, False: 10]
+  ------------------
+  238|      0|      case OPERATOR_MULTIPLICATION: return v1 * v2;
+  ------------------
+  |  Branch (238:7): [True: 0, False: 13]
+  ------------------
+  239|      0|      case OPERATOR_DIVISION:       return v1 / checkZero(v2);
+  ------------------
+  |  Branch (239:7): [True: 0, False: 13]
+  ------------------
+  240|      8|      case OPERATOR_MODULO:         return v1 % checkZero(v2);
+  ------------------
+  |  Branch (240:7): [True: 8, False: 5]
+  ------------------
+  241|      0|      case OPERATOR_INTEGER_DIVISION: return v1/v2;
+  ------------------
+  |  Branch (241:7): [True: 0, False: 13]
+  ------------------
+  242|      0|      case OPERATOR_POWER:          return pow(v1, v2);
+  ------------------
+  |  Branch (242:7): [True: 0, False: 13]
+  ------------------
+  243|      0|      case OPERATOR_EXPONENT:       return v1 * pow(10, v2);
+  ------------------
+  |  Branch (243:7): [True: 0, False: 13]
+  ------------------
+  244|      0|      default:                      return 0;
+  ------------------
+  |  Branch (244:7): [True: 0, False: 13]
+  ------------------
+  245|     13|    }
+  246|     13|  }
+_ZNK10calculator16ExpressionParserIiE9checkZeroEi:
+  211|      8|  {
+  212|      8|    if (value == 0)
+  ------------------
+  |  Branch (212:9): [True: 0, False: 8]
+  ------------------
+  213|      0|    {
+  214|      0|      std::string divOperators("/%");
+  215|      0|      std::size_t division = expr_.find_last_of(divOperators, index_ - 2);
+  216|      0|      std::ostringstream msg;
+  217|      0|      msg << "Parser error: division by 0";
+  218|      0|      if (division != std::string::npos)
+  ------------------
+  |  Branch (218:11): [True: 0, False: 0]
+  ------------------
+  219|      0|        msg << " (error token is \""
+  220|      0|            << expr_.substr(division, expr_.size() - division)
+  221|      0|            << "\")";
+  222|      0|      throw calculator::error(expr_, msg.str());
+  223|      0|    }
+  224|      8|    return value;
+  225|      8|  }
+_ZNK10calculator16ExpressionParserIiE5isEndEv:
+  249|  1.82k|  {
+  250|  1.82k|    return index_ >= expr_.size();
+  251|  1.82k|  }
+_ZNK10calculator16ExpressionParserIiE10unexpectedEv:
+  274|    102|  {
+  275|    102|    std::ostringstream msg;
+  276|    102|    msg << "Syntax error: unexpected token \""
+  277|    102|        << expr_.substr(index_, expr_.size() - index_)
+  278|    102|        << "\" at index "
+  279|    102|        << index_;
+  280|    102|    throw calculator::error(expr_, msg.str());
+  281|    102|  }
+
+LLVMFuzzerTestOneInput:
+    3|    112|extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
+    4|       |    // Convert input data into a string
+    5|    112|    std::string Input(reinterpret_cast<const char*>(Data), Size);
+    6|       |
+    7|       |    // Call calculator::eval with the fuzzed input
+    8|    112|    try { 
+    9|    112|        calculator::eval<int>(Input);
+   10|       |
+   11|       |        // Introduce mutations to explore more paths
+   12|    117|        for (size_t i = 0; i < Size; ++i) {
+  ------------------
+  |  Branch (12:28): [True: 5, False: 112]
+  ------------------
+   13|       |            // Example mutation strategy: Flip each bit in the input data
+   14|      5|            uint8_t mutatedData = Data[i] ^ 0xFF;
+   15|      5|            std::string MutatedInput(reinterpret_cast<const char*>(&mutatedData), Size);
+   16|      5|            calculator::eval<int>(MutatedInput);
+   17|      5|        }
+   18|       |
+   19|       |        // Generate targeted inputs for specific operations or edge cases
+   20|    112|        if (Size > 0) {
+  ------------------
+  |  Branch (20:13): [True: 0, False: 112]
+  ------------------
+   21|       |            // Example: Add inputs that focus on division operations
+   22|      0|            std::string DivisionInput = "10 / " + Input.substr(1);  // Avoid starting with zero
+   23|      0|            calculator::eval<int>(DivisionInput);
+   24|       |
+   25|       |            // Example: Test with an input that might cause a specific error
+   26|      0|            std::string ErrorInput = "invalid input";
+   27|      0|            calculator::eval<int>(ErrorInput);
+   28|      0|        }
+   29|       |
+   30|    112|    } catch (const calculator::error&) {
+   31|       |        // Handle calculator errors, if necessary
+   32|       |        // For example, log the error or ignore it based on the application's error handling strategy
+   33|    112|    }
+   34|       |
+   35|    112|    return 0;
+   36|    112|}
+
